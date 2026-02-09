@@ -23,7 +23,7 @@ A lightweight, **self-hostable** invoice PDF generator. No cloud, no accounts.
 
 API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_modules.
 
-## Stack
+## Compared to [easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf)
 
 | | Original | Lite |
 |-|----------|------|
