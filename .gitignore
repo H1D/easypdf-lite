@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+screenshots/
+.claude/
+*.tgz
+.DS_Store
+explore-site.mjs
+public/js/app.js
+public/js/app.js.map

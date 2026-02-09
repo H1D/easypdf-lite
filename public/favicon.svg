@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f0e8"/>
+      <stop offset="100%" stop-color="#e8e0d0"/>
+    </linearGradient>
+  </defs>
+  <!-- Paper sheet with folded corner -->
+  <path d="M6 2h14l6 6v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="url(#pg)" stroke="#8a7e6b" stroke-width="1"/>
+  <path d="M20 2v4a2 2 0 0 0 2 2h4" fill="none" stroke="#8a7e6b" stroke-width="1"/>
+  <path d="M20 2l6 6h-4a2 2 0 0 1-2-2z" fill="#d9d0c0" stroke="#8a7e6b" stroke-width="0.5"/>
+  <!-- Text lines -->
+  <rect x="8" y="11" width="12" height="1.5" rx="0.5" fill="#c2853e"/>
+  <rect x="8" y="15" width="16" height="1" rx="0.5" fill="#a89880"/>
+  <rect x="8" y="18.5" width="14" height="1" rx="0.5" fill="#a89880"/>
+  <rect x="8" y="22" width="16" height="1" rx="0.5" fill="#a89880"/>
+  <!-- Total line -->
+  <rect x="8" y="26" width="8" height="1.5" rx="0.5" fill="#c2853e"/>
+</svg>

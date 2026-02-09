@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "declaration": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["bun-types"]
+  },
+  "include": ["src/**/*.ts", "public/js/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", "e2e"]
+}
