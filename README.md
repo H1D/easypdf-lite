@@ -1,6 +1,6 @@
 # EasyPDF Lite
 
-A lightweight, self-hostable invoice PDF generator. No cloud, no accounts.
+A lightweight, **self-hostable** invoice PDF generator. No cloud, no accounts.
 
 ![EasyPDF Lite](screenshot.png)
 
