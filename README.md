@@ -2,6 +2,8 @@
 
 A lightweight, **self-hostable** invoice PDF generator. No cloud, no accounts.
 
+**Try it:** [h1d.github.io/easypdf-lite](https://h1d.github.io/easypdf-lite/)
+
 ![EasyPDF Lite](screenshot.png)
 
 ## Why
@@ -31,6 +33,8 @@ API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_mo
 | PDF | @react-pdf/renderer | jsPDF (browser-side) |
 | Dependencies | 50+ | 3 runtime, 4 dev |
 | Client payload | ~2 MB | ~555 KB |
+| Startup time | 1.2s | 36ms |
+| Memory (idle) | 290 MB | 26 MB |
 
 ## Self-hosting
 
