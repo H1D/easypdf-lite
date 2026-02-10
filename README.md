@@ -8,7 +8,9 @@ A lightweight, **self-hostable** invoice PDF generator. No cloud, no accounts.
 
 ## Why
 
-[easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf) is a solid tool but ships with Next.js 15, React 19, and 50+ npm dependencies. That's a lot of machinery for generating a PDF. This project rebuilds the core functionality with a minimal stack so you can run it anywhere in seconds.
+Existing open-source invoice generators are surprisingly heavy to self-host — 1 GB+ Docker images, dozens of environment variables, external databases. This one is a 10 MB container that runs on a Raspberry Pi. One command, no config, no database, nothing phones home.
+
+Inspired by [easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf).
 
 ## What you get
 
