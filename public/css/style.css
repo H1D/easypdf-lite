@@ -150,7 +150,31 @@ body::before {
 
 .header-right {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-light);
+  text-decoration: none;
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-md);
+  letter-spacing: 0.01em;
+  transition: all 0.2s var(--ease-out);
+  margin-right: 4px;
+}
+
+.gh-link:hover {
+  color: var(--ink);
+  border-color: var(--border);
+  background: var(--accent-soft);
 }
 
 /* === Buttons === */
@@ -819,6 +843,8 @@ input[type="file"] {
   .header-right .btn svg + span,
   .header-right .btn:not(:has(svg)) { font-size: 0; }
   .header-right .btn { padding: 8px 12px; }
+  .gh-link span { display: none; }
+  .gh-link { padding: 6px; margin-right: 0; }
 
   .item-fields { grid-template-columns: 1fr; }
   .item-field[data-col="name"] { grid-column: span 1; }
