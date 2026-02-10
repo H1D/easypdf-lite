@@ -35,7 +35,7 @@ API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_mo
 | Client payload | ~2 MB | ~555 KB |
 | Startup time | 1.2s | 36ms |
 | Memory (idle) | 290 MB | 26 MB |
-| Docker image | 6.4 GB | 275 MB |
+| Docker image | 6.4 GB | 63 MB |
 | node_modules | 1.3 GB | 83 MB |
 
 ## Self-hosting
