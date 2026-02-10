@@ -5,7 +5,8 @@ RUN bun install --frozen-lockfile --production
 COPY . .
 RUN bun run build
 
-FROM nginx:alpine
-COPY --from=build /app/public /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+FROM joseluisq/static-web-server:2
+COPY --from=build /app/public /public
+COPY sws.toml /config.toml
+ENV SERVER_CONFIG_FILE=/config.toml
 EXPOSE 3000
