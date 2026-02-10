@@ -27,14 +27,13 @@ API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_mo
 
 | | Original | Lite |
 |-|----------|------|
-| Runtime | Node.js + Next.js | Bun |
+| Runtime | Node.js + Next.js | Bun (build) + nginx (serve) |
 | UI | React 19 + shadcn/ui | Vanilla TS |
 | Styling | Tailwind CSS | Plain CSS |
 | PDF | @react-pdf/renderer | jsPDF (browser-side) |
 | Dependencies | 50+ | 3 runtime, 4 dev |
 | Client payload | ~2 MB | ~555 KB |
-| Startup time | 1.2s | 36ms |
-| Memory (idle) | 290 MB | 26 MB |
+| Memory (idle) | 290 MB | 17 MB |
 | Docker image | 6.4 GB | 63 MB |
 | node_modules | 1.3 GB | 83 MB |
 
