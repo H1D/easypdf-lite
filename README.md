@@ -8,7 +8,7 @@ A lightweight, **self-hostable** invoice PDF generator. No cloud, no accounts.
 
 ## Why
 
-Existing open-source invoice generators are surprisingly heavy to self-host — 1 GB+ Docker images, dozens of environment variables, external databases. This one is a 10 MB container that runs on a Raspberry Pi. One command, no config, no database, nothing phones home.
+Existing open-source invoice generators are surprisingly heavy to self-host — 1 GB+ Docker images, dozens of environment variables, external databases. This one is a 10 MB container. One command, no config, no database.
 
 Inspired by [easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf).
 
