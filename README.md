@@ -33,8 +33,8 @@ API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_mo
 | PDF | @react-pdf/renderer | jsPDF (browser-side) |
 | Dependencies | 50+ | 3 runtime, 4 dev |
 | Client payload | ~2 MB | ~555 KB |
-| Memory (idle) | 290 MB | 17 MB |
-| Docker image | 6.4 GB | 63 MB |
+| Memory (idle) | 290 MB | 4 MB |
+| Docker image | 6.4 GB | 10 MB |
 | node_modules | 1.3 GB | 83 MB |
 
 ## Self-hosting
