@@ -31,15 +31,9 @@ The app accepts a `?data=` URL parameter containing a compressed invoice. You ca
 ```js
 import LZString from "lz-string";
 
-// Key compression map (same keys the app uses internally)
-const KEY_MAP = {
-  language: "a", currency: "c", seller: "k", buyer: "l",
-  items: "m", name: "A", address: "B", vatNo: "C",
-  dateOfIssue: "g", dateOfService: "h", paymentDue: "r",
-  amount: "N", unit: "P", netPrice: "R", vat: "T",
-  netAmount: "V", vatAmount: "X", preTaxAmount: "Z",
-  total: "n", notes: "t",
-};
+// Fetch the key compression map — always in sync with the app.
+const KEY_MAP = await fetch("https://h1d.github.io/easypdf-lite/key-map.json")
+  .then((r) => r.json());
 
 function compressKeys(obj) {
   if (Array.isArray(obj)) return obj.map(compressKeys);
@@ -72,7 +66,7 @@ const compressed = LZString.compressToEncodedURIComponent(
 const url = `https://h1d.github.io/easypdf-lite/?data=${compressed}`;
 ```
 
-Only include the fields you need — the app fills in defaults for everything else. See [`src/types.ts`](src/types.ts) for the full `InvoiceData` shape.
+Only include the fields you need — the app fills in defaults for everything else. The key map is served at [`/key-map.json`](https://h1d.github.io/easypdf-lite/key-map.json) and stays in sync with the source automatically. See [`src/types.ts`](src/types.ts) for the full `InvoiceData` shape.
 
 </details>
 

@@ -1,5 +1,7 @@
 export {};
 
+import { INVOICE_KEY_COMPRESSION_MAP } from "../public/js/url-sharing";
+
 // Bundle the frontend TypeScript into a single JS file.
 // jspdf and jspdf-autotable are loaded as UMD globals via <script> tags,
 // so they must be excluded from the bundle.
@@ -22,5 +24,12 @@ if (!result.success) {
   }
   process.exit(1);
 }
+
+// Write the key compression map as a JSON file so external consumers
+// can generate share URLs without hardcoding the map.
+await Bun.write(
+  "./public/key-map.json",
+  JSON.stringify(INVOICE_KEY_COMPRESSION_MAP, null, 2) + "\n",
+);
 
 console.log("Build complete.");
