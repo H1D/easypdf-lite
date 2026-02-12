@@ -52,7 +52,7 @@ export interface TranslationSet {
     amount: string;
     unit: string;
     netPrice: (arg: CustomTaxLabelArg) => string;
-    vat: string;
+    vat: (arg: CustomTaxLabelArg) => string;
     vatAmount: (arg: CustomTaxLabelArg) => string;
     netAmount: (arg: CustomTaxLabelArg) => string;
     preTaxAmount: (arg: CustomTaxLabelArg) => string;
@@ -71,7 +71,7 @@ export interface TranslationSet {
   vatSummaryTable: {
     vatRate: (arg: CustomTaxLabelArg) => string;
     net: (arg: CustomTaxLabelArg) => string;
-    vat: string;
+    vat: (arg: CustomTaxLabelArg) => string;
     preTax: (arg: CustomTaxLabelArg) => string;
     total: string;
   };
@@ -114,7 +114,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Net price";
       },
-      vat: "VAT",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "VAT";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "VAT"} Amount`;
       },
@@ -140,7 +142,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "VAT"} rate`;
       },
-      vat: "VAT",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "VAT";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Net";
       },
@@ -200,7 +204,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Cena\n netto";
       },
-      vat: "VAT",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "VAT";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Kwota ${customTaxLabel || "VAT"}`;
       },
@@ -226,7 +232,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Stawka ${customTaxLabel || "VAT"}`;
       },
-      vat: "VAT",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "VAT";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Netto";
       },
@@ -286,7 +294,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Nettopreis";
       },
-      vat: "MwSt.",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "MwSt.";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "MwSt."}-Betrag`;
       },
@@ -312,7 +322,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "MwSt."}-Satz`;
       },
-      vat: "MwSt.",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "MwSt.";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Netto";
       },
@@ -372,7 +384,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Precio neto";
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Importe ${customTaxLabel || "IVA"}`;
       },
@@ -398,7 +412,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Tipo ${customTaxLabel || "IVA"}`;
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Neto";
       },
@@ -458,7 +474,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Preço\n líquido";
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Valor ${customTaxLabel || "IVA"}`;
       },
@@ -484,7 +502,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Taxa ${customTaxLabel || "IVA"}`;
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Líquido";
       },
@@ -544,7 +564,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Цена без ${customTaxLabel || "НДС"}`;
       },
-      vat: "НДС",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "НДС";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Сумма ${customTaxLabel || "НДС"}`;
       },
@@ -570,7 +592,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Ставка ${customTaxLabel || "НДС"}`;
       },
-      vat: "НДС",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "НДС";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Без ${customTaxLabel || "НДС"}`;
       },
@@ -630,7 +654,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Ціна без ${customTaxLabel || "ПДВ"}`;
       },
-      vat: "ПДВ",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "ПДВ";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Сума ${customTaxLabel || "ПДВ"}`;
       },
@@ -656,7 +682,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Ставка ${customTaxLabel || "ПДВ"}`;
       },
-      vat: "ПДВ",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "ПДВ";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Без ${customTaxLabel || "ПДВ"}`;
       },
@@ -716,7 +744,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Prix HT";
       },
-      vat: "TVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "TVA";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Montant de la ${customTaxLabel || "TVA"}`;
       },
@@ -742,7 +772,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Taux ${customTaxLabel || "TVA"}`;
       },
-      vat: "TVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "TVA";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "HT";
       },
@@ -802,7 +834,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Prezzo netto";
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Importo ${customTaxLabel || "IVA"}`;
       },
@@ -828,7 +862,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `Aliquota ${customTaxLabel || "IVA"}`;
       },
-      vat: "IVA",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "IVA";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Netto";
       },
@@ -888,7 +924,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Netto prijs";
       },
-      vat: "BTW",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "BTW";
+      },
       vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "BTW"}-bedrag`;
       },
@@ -914,7 +952,9 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return `${customTaxLabel || "BTW"}-tarief`;
       },
-      vat: "BTW",
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "BTW";
+      },
       net: ({ customTaxLabel }: CustomTaxLabelArg) => {
         return "Netto";
       },

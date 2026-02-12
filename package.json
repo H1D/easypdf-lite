@@ -6,7 +6,8 @@
     "dev": "bun run --watch src/server.ts",
     "build": "bun run scripts/build.ts",
     "start": "bun run src/server.ts",
-    "test": "bunx playwright test"
+    "test": "bunx playwright test",
+    "test:unit": "bun test tests/"
   },
   "dependencies": {
     "jspdf": "^2.5.2",

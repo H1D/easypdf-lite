@@ -359,7 +359,7 @@ function drawItemsTable(
     });
   }
   if (firstItem.vatFieldIsVisible) {
-    columns.push({ header: t.invoiceItemsTable.vat, dataKey: 'vat', halign: 'center', cellWidth: 35 });
+    columns.push({ header: t.invoiceItemsTable.vat({ customTaxLabel: taxLabel }), dataKey: 'vat', halign: 'center', cellWidth: 35 });
   }
   if (firstItem.netAmountFieldIsVisible) {
     columns.push({
@@ -538,7 +538,7 @@ function drawPaymentAndVatSummary(
     const vatHeaders = [
       t.vatSummaryTable.vatRate({ customTaxLabel: taxLabel }),
       t.vatSummaryTable.net({ customTaxLabel: taxLabel }),
-      t.vatSummaryTable.vat,
+      t.vatSummaryTable.vat({ customTaxLabel: taxLabel }),
       t.vatSummaryTable.preTax({ customTaxLabel: taxLabel }),
     ];
 
