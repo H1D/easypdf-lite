@@ -1,0 +1,75 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run build
+
+      - name: Deploy to Netlify (Production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx netlify-cli deploy --dir=public --prod
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Deploy to Netlify (Preview)
+        if: github.event_name == 'pull_request'
+        id: preview
+        run: |
+          OUTPUT=$(npx netlify-cli deploy --dir=public --json)
+          DEPLOY_URL=$(echo "$OUTPUT" | jq -r '.deploy_url')
+          echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Update PR description with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.preview.outputs.deploy_url }}';
+            const marker = '<!-- netlify-preview -->';
+            const previewBlock = `${marker}\n---\n**Deploy Preview:** ${url}`;
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            let body = pr.body || '';
+
+            if (body.includes(marker)) {
+              // Replace existing preview block
+              body = body.replace(
+                new RegExp(`${marker}[\\s\\S]*$`),
+                previewBlock
+              );
+            } else {
+              // Append preview block
+              body = body.trimEnd() + '\n\n' + previewBlock;
+            }
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body,
+            });
