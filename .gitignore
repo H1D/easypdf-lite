@@ -9,3 +9,6 @@ screenshots/
 explore-site.mjs
 public/js/app.js
 public/js/app.js.map
+
+# Local Netlify folder
+.netlify

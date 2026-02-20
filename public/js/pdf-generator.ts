@@ -9,8 +9,6 @@ declare const jspdf: { jsPDF: any };
 declare const openSansRegularFont: string;
 declare const openSansBoldFont: string;
 
-// Module-level variable to track the previous preview URL for cleanup
-let previousPreviewUrl: string | null = null;
 
 /** Register Open Sans (Regular + Bold) with a jsPDF instance. */
 function registerFonts(doc: any): void {
@@ -855,37 +853,16 @@ export function downloadPdf(data: InvoiceData): void {
 }
 
 /**
- * Generate the PDF blob, create an object URL, and set it as the src
- * on the #pdf-preview iframe. Revokes the previous URL to prevent
- * memory leaks.
+ * Generate the PDF and set it as the src on the #pdf-preview iframe
+ * using a data URL. This avoids the blob URL approach which causes
+ * Firefox/Waterfox to download the PDF instead of displaying it inline.
  */
 export function updatePreview(data: InvoiceData): void {
-  const blob = generatePdfBlob(data);
-  const url = URL.createObjectURL(blob);
+  const doc = generatePdf(data);
+  const dataUrl = doc.output('dataurlstring') as string;
 
   const iframe = document.getElementById('pdf-preview') as HTMLIFrameElement | null;
   if (iframe) {
-    iframe.src = url;
-    // Once loaded, force the iframe's internal document to fill available space
-    iframe.onload = () => {
-      try {
-        const doc = iframe.contentDocument;
-        if (doc?.documentElement) {
-          doc.documentElement.style.height = '100%';
-          doc.documentElement.style.overflow = 'hidden';
-        }
-        if (doc?.body) {
-          doc.body.style.height = '100%';
-          doc.body.style.overflow = 'hidden';
-          doc.body.style.margin = '0';
-        }
-      } catch (_) { /* cross-origin — ignore */ }
-    };
+    iframe.src = dataUrl;
   }
-
-  // Revoke the previous URL to prevent memory leaks
-  if (previousPreviewUrl) {
-    URL.revokeObjectURL(previousPreviewUrl);
-  }
-  previousPreviewUrl = url;
 }
