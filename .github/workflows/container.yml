@@ -13,6 +13,7 @@ env:
 permissions:
   contents: read
   packages: write
+  pull-requests: write
 
 jobs:
   build:
@@ -33,12 +34,55 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
+            type=ref,event=pr
             type=raw,value=latest,enable={{is_default_branch}}
 
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Containerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update PR description with docker run command
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          IMAGE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }}
+        with:
+          script: |
+            const image = process.env.IMAGE_TAG.toLowerCase();
+            const marker = '<!-- container-preview -->';
+            const previewBlock = [
+              marker,
+              '---',
+              '**Container Preview:**',
+              '```',
+              `docker run --rm -p 3000:3000 ${image}`,
+              '```',
+            ].join('\n');
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            let body = pr.body || '';
+
+            if (body.includes(marker)) {
+              body = body.replace(
+                new RegExp(`${marker}[\\s\\S]*?\`\`\`\\n[^\`]*\`\`\``),
+                previewBlock
+              );
+            } else {
+              body = body.trimEnd() + '\n\n' + previewBlock;
+            }
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body,
+            });
