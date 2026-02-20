@@ -321,7 +321,12 @@
               <label class="toggle-label"><input type="checkbox" id="toggle-netAmount" checked data-testid="toggle-net-amount"> Net Amount</label>
               <label class="toggle-label"><input type="checkbox" id="toggle-vatAmount" checked data-testid="toggle-vat-amount"> VAT Amount</label>
               <label class="toggle-label"><input type="checkbox" id="toggle-preTaxAmount" checked data-testid="toggle-pre-tax-amount"> Pre-tax</label>
+              <label class="toggle-label"><input type="checkbox" id="toggle-itemNotes" data-testid="toggle-item-notes"> Notes</label>
             </div>
+
+            <!-- Custom column toggles -->
+            <div id="custom-column-toggles" class="field-toggles custom-column-toggles hidden" data-testid="custom-column-toggles"></div>
+            <button type="button" id="btn-add-column" class="btn btn-sm btn-outline btn-add-column" data-testid="add-column-button">+ Add Column</button>
 
             <!-- VAT Summary toggle -->
             <div class="field-toggles vat-summary-toggles">
@@ -434,6 +439,10 @@
         <div class="item-field computed" data-col="preTaxAmount">
           <label>Pre-tax Amount</label>
           <span class="item-pre-tax-amount" data-testid="item-pre-tax-amount">0.00</span>
+        </div>
+        <div class="item-field" data-col="itemNotes">
+          <label>Notes</label>
+          <textarea class="item-notes" maxlength="500" rows="2" placeholder="Item notes..." data-testid="item-notes-input"></textarea>
         </div>
       </div>
     </div>

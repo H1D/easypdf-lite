@@ -1,6 +1,7 @@
 import type {
   InvoiceData,
   InvoiceItem,
+  CustomColumnDef,
   SavedSeller,
   SavedBuyer,
   SupportedCurrency,
@@ -22,6 +23,7 @@ import { formatNumber } from "./utils";
 // ── Internal state ──────────────────────────────────────────────────────────
 
 let _onChange: () => void = () => {};
+let _customColumns: CustomColumnDef[] = [];
 
 // ── Init ────────────────────────────────────────────────────────────────────
 
@@ -145,7 +147,12 @@ export function populateForm(data: InvoiceData): void {
     setCheckbox("toggle-netAmount", first.netAmountFieldIsVisible);
     setCheckbox("toggle-vatAmount", first.vatAmountFieldIsVisible);
     setCheckbox("toggle-preTaxAmount", first.preTaxAmountFieldIsVisible);
+    setCheckbox("toggle-itemNotes", first.itemNotesFieldIsVisible ?? false);
   }
+
+  // Restore custom columns
+  _customColumns = data.customColumns ?? [];
+  renderCustomColumnToggles();
 
   // Template-specific visibility
   handleTemplateChange(data.template);
@@ -226,6 +233,11 @@ export function extractFormData(): InvoiceData {
     stripePayOnlineUrl: getInputValue("stripePayOnlineUrl") || undefined,
   };
 
+  // Custom columns
+  if (_customColumns.length > 0) {
+    data.customColumns = _customColumns;
+  }
+
   // Read logo data URI from preview image if present
   const logoImg = document.getElementById("logo-img") as HTMLImageElement | null;
   if (logoImg && logoImg.src && logoImg.src.startsWith("data:")) {
@@ -262,6 +274,18 @@ function extractItems(): InvoiceItem[] {
     const vatAmount = typeof vat === "number" ? (netAmount * vat) / 100 : 0;
     const preTaxAmount = netAmount + vatAmount;
 
+    // Read item notes
+    const notesEl = el.querySelector<HTMLTextAreaElement>(".item-notes");
+    const itemNotes = notesEl?.value ?? "";
+    const itemNotesFieldIsVisible = getCheckbox("toggle-itemNotes");
+
+    // Read custom fields
+    const customFields: Record<string, string> = {};
+    for (const col of _customColumns) {
+      const cfInput = el.querySelector<HTMLInputElement>(`.item-custom-field[data-col-id="${col.id}"]`);
+      customFields[col.id] = cfInput?.value ?? "";
+    }
+
     items.push({
       invoiceItemNumberIsVisible: getCheckbox("toggle-itemNumber"),
       name,
@@ -282,6 +306,9 @@ function extractItems(): InvoiceItem[] {
       vatAmountFieldIsVisible: getCheckbox("toggle-vatAmount"),
       preTaxAmount,
       preTaxAmountFieldIsVisible: getCheckbox("toggle-preTaxAmount"),
+      itemNotes,
+      itemNotesFieldIsVisible,
+      customFields: _customColumns.length > 0 ? customFields : undefined,
     });
   }
 
@@ -318,8 +345,17 @@ export function addInvoiceItem(data?: Partial<InvoiceItem>): void {
   if (netPriceInput) netPriceInput.value = String(data?.netPrice ?? 0);
   if (vatInput) vatInput.value = String(data?.vat ?? 23);
 
+  // Populate item notes
+  const notesTextarea = itemEl.querySelector<HTMLTextAreaElement>(".item-notes");
+  if (notesTextarea) notesTextarea.value = data?.itemNotes ?? "";
+
   // Append first so DOM queries work on it
   container.appendChild(clone);
+
+  // Add dynamic custom column fields
+  for (const col of _customColumns) {
+    addCustomFieldToItem(itemEl, col, data?.customFields?.[col.id] ?? "");
+  }
 
   // Compute initial values
   recalculateItem(itemEl);
@@ -340,6 +376,12 @@ export function addInvoiceItem(data?: Partial<InvoiceItem>): void {
       recalculateTotal();
       _onChange();
     });
+  }
+
+  // Wire up textarea change events (item notes)
+  const textareas = itemEl.querySelectorAll<HTMLTextAreaElement>("textarea");
+  for (const ta of textareas) {
+    ta.addEventListener("input", () => { _onChange(); });
   }
 
   // Update numbering and button states
@@ -393,6 +435,14 @@ function resetItem(itemEl: HTMLElement): void {
   if (unitInput) unitInput.value = "pcs";
   if (netPriceInput) netPriceInput.value = "0";
   if (vatInput) vatInput.value = "23";
+
+  // Clear notes
+  const notesEl = itemEl.querySelector<HTMLTextAreaElement>(".item-notes");
+  if (notesEl) notesEl.value = "";
+
+  // Clear custom fields
+  const customInputs = itemEl.querySelectorAll<HTMLInputElement>(".item-custom-field");
+  for (const input of customInputs) input.value = "";
 }
 
 /**
@@ -516,6 +566,7 @@ export function updateColumnVisibility(): void {
     "toggle-netAmount": "netAmount",
     "toggle-vatAmount": "vatAmount",
     "toggle-preTaxAmount": "preTaxAmount",
+    "toggle-itemNotes": "itemNotes",
   };
 
   const container = document.getElementById("items-container");
@@ -540,6 +591,9 @@ export function updateColumnVisibility(): void {
       }
     }
   }
+
+  // Custom column visibility
+  updateCustomColumnVisibility();
 }
 
 // ── Template change ─────────────────────────────────────────────────────────
@@ -749,6 +803,147 @@ export function setupBuyerProfiles(
         onDelete(selectedId);
       }
     });
+  }
+}
+
+// ── Custom columns ──────────────────────────────────────────────────────────
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Add a custom column input to a single item element.
+ */
+function addCustomFieldToItem(itemEl: HTMLElement, col: CustomColumnDef, value: string = ""): void {
+  const fieldsContainer = itemEl.querySelector<HTMLElement>(".item-fields");
+  if (!fieldsContainer) return;
+
+  const fieldDiv = document.createElement("div");
+  fieldDiv.className = "item-field";
+  fieldDiv.dataset.col = `custom-${col.id}`;
+  fieldDiv.innerHTML = `<label>${escapeHtml(col.header)}</label>`;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "item-custom-field";
+  input.dataset.colId = col.id;
+  input.maxLength = 200;
+  input.value = value;
+  input.addEventListener("input", () => { _onChange(); });
+
+  fieldDiv.appendChild(input);
+
+  // Insert before the itemNotes field if it exists, otherwise append
+  const notesField = fieldsContainer.querySelector<HTMLElement>('.item-field[data-col="itemNotes"]');
+  if (notesField) {
+    fieldsContainer.insertBefore(fieldDiv, notesField);
+  } else {
+    fieldsContainer.appendChild(fieldDiv);
+  }
+
+  // Apply visibility
+  fieldDiv.style.display = col.visible ? "" : "none";
+}
+
+/**
+ * Add a new custom column. Creates the column definition, adds input fields
+ * to all existing items, and renders the toggle UI.
+ */
+export function addCustomColumn(header: string): void {
+  const id = `cc_${Date.now()}`;
+  const col: CustomColumnDef = { id, header, visible: true };
+  _customColumns.push(col);
+
+  // Add field to every existing item
+  const container = document.getElementById("items-container");
+  if (container) {
+    const items = container.querySelectorAll<HTMLElement>(".invoice-item");
+    for (const item of items) {
+      addCustomFieldToItem(item, col);
+    }
+  }
+
+  renderCustomColumnToggles();
+  _onChange();
+}
+
+/**
+ * Remove a custom column by id. Removes from state, removes input fields
+ * from all items, and re-renders toggle UI.
+ */
+export function removeCustomColumn(colId: string): void {
+  _customColumns = _customColumns.filter(c => c.id !== colId);
+
+  // Remove fields from all items
+  const container = document.getElementById("items-container");
+  if (container) {
+    const fields = container.querySelectorAll<HTMLElement>(`.item-field[data-col="custom-${colId}"]`);
+    for (const f of fields) f.remove();
+  }
+
+  renderCustomColumnToggles();
+  _onChange();
+}
+
+/**
+ * Render the custom column toggles UI.
+ */
+function renderCustomColumnToggles(): void {
+  const togglesContainer = document.getElementById("custom-column-toggles");
+  if (!togglesContainer) return;
+
+  togglesContainer.innerHTML = "";
+
+  if (_customColumns.length === 0) {
+    togglesContainer.classList.add("hidden");
+    return;
+  }
+
+  togglesContainer.classList.remove("hidden");
+
+  for (const col of _customColumns) {
+    const label = document.createElement("label");
+    label.className = "toggle-label custom-col-toggle";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = col.visible;
+    checkbox.addEventListener("change", () => {
+      col.visible = checkbox.checked;
+      updateCustomColumnVisibility();
+      _onChange();
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn-remove-custom-col";
+    removeBtn.title = `Remove "${col.header}"`;
+    removeBtn.innerHTML = "&times;";
+    removeBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      removeCustomColumn(col.id);
+    });
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(` ${col.header} `));
+    label.appendChild(removeBtn);
+    togglesContainer.appendChild(label);
+  }
+}
+
+/**
+ * Apply visibility to all custom column fields across all items.
+ */
+function updateCustomColumnVisibility(): void {
+  const container = document.getElementById("items-container");
+  if (!container) return;
+
+  for (const col of _customColumns) {
+    const fields = container.querySelectorAll<HTMLElement>(`.item-field[data-col="custom-${col.id}"]`);
+    for (const field of fields) {
+      field.style.display = col.visible ? "" : "none";
+    }
   }
 }
 

@@ -331,6 +331,9 @@ function drawItemsTable(
   const firstItem = data.items[0];
   if (!firstItem) return y;
 
+  // Visible custom columns
+  const visibleCustomCols = (data.customColumns ?? []).filter(c => c.visible);
+
   // Build columns based on visibility flags from the first item
   type ColDef = { header: string; dataKey: string; halign: string; cellWidth?: number };
   const columns: ColDef[] = [];
@@ -344,6 +347,12 @@ function drawItemsTable(
   if (firstItem.typeOfGTUFieldIsVisible) {
     columns.push({ header: t.invoiceItemsTable.typeOfGTU, dataKey: 'gtu', halign: 'center', cellWidth: 40 });
   }
+
+  // Custom columns — after GTU, before amount
+  for (const cc of visibleCustomCols) {
+    columns.push({ header: cc.header, dataKey: `custom_${cc.id}`, halign: 'left', cellWidth: 50 });
+  }
+
   if (firstItem.amountFieldIsVisible) {
     columns.push({ header: t.invoiceItemsTable.amount, dataKey: 'amount', halign: 'right', cellWidth: 45 });
   }
@@ -386,8 +395,14 @@ function drawItemsTable(
     });
   }
 
-  // Build row data for each item
-  const body: string[][] = data.items.map((item: InvoiceItem, index: number) => {
+  // Track which rows are note sub-rows (for styling in didParseCell)
+  const noteRowIndices = new Set<number>();
+
+  // Build row data for each item, inserting note sub-rows where applicable
+  const body: string[][] = [];
+  const showItemNotes = firstItem.itemNotesFieldIsVisible ?? false;
+
+  data.items.forEach((item: InvoiceItem, index: number) => {
     const rowValues: Record<string, string> = {
       no: String(index + 1),
       name: item.name,
@@ -400,10 +415,23 @@ function drawItemsTable(
       vatAmount: formatNumber(item.vatAmount),
       preTaxAmount: formatNumber(item.preTaxAmount),
     };
-    return columns.map((col) => rowValues[col.dataKey]);
+    // Add custom field values
+    for (const cc of visibleCustomCols) {
+      rowValues[`custom_${cc.id}`] = item.customFields?.[cc.id] ?? '';
+    }
+
+    body.push(columns.map((col) => rowValues[col.dataKey]));
+
+    // Insert note sub-row if item notes are visible and non-empty
+    if (showItemNotes && item.itemNotes) {
+      const noteRow: string[] = columns.map((_, i) => i === 0 ? item.itemNotes! : '');
+      noteRowIndices.add(body.length);
+      body.push(noteRow);
+    }
   });
 
   // Sum row: last column shows "SUM: {formattedTotal}", rest are empty
+  const sumRowIndex = body.length;
   const sumRow: string[] = columns.map((_col, idx) => {
     if (idx === columns.length - 1) {
       return `${t.invoiceItemsTable.sum}: ${formatNumber(data.total)}`;
@@ -448,12 +476,30 @@ function drawItemsTable(
       font: 'OpenSans',
     },
     columnStyles: columnStyles,
-    // Style the sum row (last row in body)
     didParseCell: (hookData: any) => {
-      if (hookData.section === 'body' && hookData.row.index === body.length - 1) {
+      const rowIdx = hookData.row.index;
+      if (hookData.section !== 'body') return;
+
+      // Style the sum row (always last)
+      if (rowIdx === sumRowIndex) {
         hookData.cell.styles.fontStyle = 'bold';
         hookData.cell.styles.fillColor = TABLE_HEADER_BG;
         hookData.cell.styles.halign = 'right';
+      }
+
+      // Style note sub-rows: merge across all columns, italic, lighter bg
+      if (noteRowIndices.has(rowIdx)) {
+        if (hookData.column.index === 0) {
+          hookData.cell.colSpan = columns.length;
+          hookData.cell.styles.fontStyle = 'italic';
+          hookData.cell.styles.fontSize = 6;
+          hookData.cell.styles.fillColor = '#fafafa';
+          hookData.cell.styles.textColor = MEDIUM_GRAY;
+          hookData.cell.styles.cellPadding = { top: 2, bottom: 2, left: 8, right: 4 };
+        } else {
+          // Hide cells that are merged into the first cell
+          hookData.cell.text = [];
+        }
       }
     },
   });
