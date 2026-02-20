@@ -1,0 +1,37 @@
+[build]
+  command = "curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/bun install --frozen-lockfile && ~/.bun/bin/bun run build"
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback - route all paths to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Cache static assets
+[[headers]]
+  for = "/js/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Security headers (matching server.ts)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
