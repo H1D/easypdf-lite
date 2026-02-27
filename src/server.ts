@@ -1,5 +1,22 @@
-const PORT = Number(process.env.PORT) || 3000;
+const PREFERRED_PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = new URL("../public", import.meta.url).pathname;
+
+function findFreePort(start: number): number {
+  for (let port = start; port < start + 100; port++) {
+    try {
+      const probe = Bun.serve({ port, fetch: () => new Response() });
+      probe.stop(true);
+      return port;
+    } catch {
+      // Port busy, try next
+    }
+  }
+  throw new Error(`No free port found in range ${start}–${start + 99}`);
+}
+
+const PORT = process.env.PORT
+  ? PREFERRED_PORT // Explicit PORT: use exactly, fail if busy
+  : findFreePort(PREFERRED_PORT); // No PORT set: auto-find free port
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html",
@@ -51,7 +68,7 @@ function respond(body: BodyInit, contentType: string): Response {
   });
 }
 
-Bun.serve({
+const server = Bun.serve({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url);
@@ -72,4 +89,6 @@ Bun.serve({
   },
 });
 
-console.log(`EasyPDF Lite running at http://localhost:${PORT}`);
+// Write port file for tooling (Playwright, etc.) to discover the running instance
+await Bun.write(`${import.meta.dir}/../.port`, String(server.port));
+console.log(`EasyPDF Lite running at http://localhost:${server.port}`);

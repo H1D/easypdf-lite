@@ -1,15 +1,17 @@
 import { defineConfig } from '@playwright/test';
 
+const PORT = Number(process.env.PORT) || 3000;
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 15000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${PORT}`,
     headless: true,
   },
   webServer: {
-    command: 'bun run start',
-    port: 3000,
+    command: `PORT=${PORT} bun run start`,
+    port: PORT,
     reuseExistingServer: true,
   },
 });

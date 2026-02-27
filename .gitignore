@@ -10,5 +10,10 @@ explore-site.mjs
 public/js/app.js
 public/js/app.js.map
 
+# Per-worktree environment config
+.env
+.env.local
+.port
+
 # Local Netlify folder
 .netlify
