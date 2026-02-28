@@ -23,6 +23,8 @@ export const INVOICE_KEY_COMPRESSION_MAP: Record<string, string> = {
   vat: "T", vatFieldIsVisible: "U", netAmount: "V", netAmountFieldIsVisible: "W",
   vatAmount: "X", vatAmountFieldIsVisible: "Y", preTaxAmount: "Z",
   preTaxAmountFieldIsVisible: "0",
+  itemNotes: "3", itemNotesFieldIsVisible: "4",
+  customColumns: "5", header: "6", visible: "7", customFields: "8",
 };
 
 /** Reverse map: compressed short key -> original key. Auto-generated from INVOICE_KEY_COMPRESSION_MAP. */

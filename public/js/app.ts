@@ -11,6 +11,7 @@ import {
   setupSellerProfiles,
   setupBuyerProfiles,
   updateColumnVisibility,
+  addCustomColumn,
 } from "./form";
 import { saveInvoiceData, loadInvoiceData, loadSellers, saveSellers, loadBuyers, saveBuyers, saveAccordionState, loadAccordionState, saveLogo, loadLogo, removeLogo } from "./storage";
 import { generateShareUrl, loadFromUrl } from "./url-sharing";
@@ -290,6 +291,16 @@ function setupFormListeners() {
     addItemBtn.addEventListener("click", () => {
       addInvoiceItem();
       recalculateTotal();
+    });
+  }
+
+  const addColumnBtn = document.getElementById("btn-add-column");
+  if (addColumnBtn) {
+    addColumnBtn.addEventListener("click", () => {
+      const header = prompt("Column name:");
+      if (header && header.trim()) {
+        addCustomColumn(header.trim());
+      }
     });
   }
 }

@@ -86,6 +86,15 @@ export interface InvoiceItem {
   vatAmountFieldIsVisible: boolean;
   preTaxAmount: number;
   preTaxAmountFieldIsVisible: boolean;
+  itemNotes?: string;
+  itemNotesFieldIsVisible?: boolean;
+  customFields?: Record<string, string>;
+}
+
+export interface CustomColumnDef {
+  id: string;
+  header: string;
+  visible: boolean;
 }
 
 export interface SellerData {
@@ -141,6 +150,7 @@ export interface InvoiceData {
   notesFieldIsVisible: boolean;
   personAuthorizedToReceiveFieldIsVisible: boolean;
   personAuthorizedToIssueFieldIsVisible: boolean;
+  customColumns?: CustomColumnDef[];
 }
 
 export interface SavedSeller extends SellerData {

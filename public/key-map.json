@@ -53,5 +53,11 @@
   "vatAmount": "X",
   "vatAmountFieldIsVisible": "Y",
   "preTaxAmount": "Z",
-  "preTaxAmountFieldIsVisible": "0"
+  "preTaxAmountFieldIsVisible": "0",
+  "itemNotes": "3",
+  "itemNotesFieldIsVisible": "4",
+  "customColumns": "5",
+  "header": "6",
+  "visible": "7",
+  "customFields": "8"
 }
