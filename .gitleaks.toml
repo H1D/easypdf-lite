@@ -1,0 +1,24 @@
+title = "Gitleaks Config"
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[a-zA-Z0-9]{36,}'''
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?'''
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[[rules]]
+id = "stripe-key"
+description = "Stripe API Key"
+regex = '''sk_(live|test)_[a-zA-Z0-9]{24,}'''
+
+[allowlist]
+paths = ['''.git/''', '''node_modules/''', '''vendor/''', '''\.env\.example''']
