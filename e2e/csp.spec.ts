@@ -11,7 +11,7 @@ test.describe('Content Security Policy', () => {
     expect(csp).toContain("script-src 'self'");
     expect(csp).toContain("style-src 'self'");
     expect(csp).toContain("img-src 'self' data:");
-    expect(csp).toContain("frame-src blob:");
+    expect(csp).toContain("frame-src blob: data:");
     expect(csp).toContain("object-src blob:");
     expect(csp).toContain("form-action 'none'");
   });
