@@ -431,7 +431,7 @@ function drawItemsTable(
   // Sum row: last column shows "SUM: {formattedTotal}", rest are empty
   const sumRowIndex = body.length;
   const sumRow: string[] = columns.map((_col, idx) => {
-    if (idx === columns.length - 1) {
+    if (idx === 0) {
       return `${t.invoiceItemsTable.sum}: ${formatNumber(data.total)}`;
     }
     return '';
@@ -480,9 +480,14 @@ function drawItemsTable(
 
       // Style the sum row (always last)
       if (rowIdx === sumRowIndex) {
-        hookData.cell.styles.fontStyle = 'bold';
-        hookData.cell.styles.fillColor = TABLE_HEADER_BG;
-        hookData.cell.styles.halign = 'right';
+        if (hookData.column.index === 0) {
+          hookData.cell.colSpan = columns.length;
+          hookData.cell.styles.fontStyle = 'bold';
+          hookData.cell.styles.fillColor = TABLE_HEADER_BG;
+          hookData.cell.styles.halign = 'right';
+        } else {
+          hookData.cell.text = [];
+        }
       }
 
       // Style note sub-rows: merge across all columns, italic, lighter bg
