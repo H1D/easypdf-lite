@@ -13,11 +13,11 @@ test.describe('Form loads with correct defaults', () => {
     await expect(langSelect).toHaveValue('en');
   });
 
-  test('language select has all 10 supported languages', async ({ page }) => {
+  test('language select has all 11 supported languages', async ({ page }) => {
     const options = page.locator('[data-testid="language-select"] option');
-    await expect(options).toHaveCount(10);
+    await expect(options).toHaveCount(11);
 
-    const expectedLanguages = ['en', 'pl', 'de', 'es', 'pt', 'ru', 'uk', 'fr', 'it', 'nl'];
+    const expectedLanguages = ['en', 'pl', 'de', 'es', 'pt', 'ru', 'uk', 'sk', 'fr', 'it', 'nl'];
     for (const lang of expectedLanguages) {
       await expect(page.locator(`[data-testid="language-select"] option[value="${lang}"]`)).toBeAttached();
     }

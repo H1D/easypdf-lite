@@ -2,7 +2,7 @@ import type { SupportedDateFormat } from "../../src/types";
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
   en: "en-US", pl: "pl-PL", de: "de-DE", es: "es-ES", pt: "pt-PT",
-  ru: "ru-RU", uk: "uk-UA", fr: "fr-FR", it: "it-IT", nl: "nl-NL",
+  ru: "ru-RU", uk: "uk-UA", sk: "sk-SK", fr: "fr-FR", it: "it-IT", nl: "nl-NL",
 };
 
 export function formatCurrency(amount: number, currency: string, language: string): string {

@@ -985,4 +985,94 @@ export const INVOICE_PDF_TRANSLATIONS: Record<string, TranslationSet> = {
       of: "van",
     },
   },
+
+  // -------------------------------------------------------------------------
+  // Slovak
+  // -------------------------------------------------------------------------
+  sk: {
+    invoiceNumber: "Faktúra",
+    seller: {
+      name: "Dodávateľ",
+      vatNo: "IČO",
+      email: "E-mail",
+      accountNumber: "Bankový účet",
+      swiftBic: "SWIFT/BIC",
+    },
+    buyer: {
+      name: "Odberateľ",
+      vatNo: "IČO",
+      email: "E-mail",
+    },
+    dateOfIssue: "Dátum vystavenia",
+    dateOfService: "Dátum dodania",
+    invoiceItemsTable: {
+      no: "Č.",
+      nameOfGoodsService: "Označenie dodávky",
+      typeOfGTU: "Typ\n GTU",
+      amount: "Počet",
+      unit: "m. j.",
+      netPrice: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return "Cena za m. j.";
+      },
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "DPH";
+      },
+      vatAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return `Suma ${customTaxLabel || "DPH"}`;
+      },
+      netAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return "Suma bez DPH";
+      },
+      preTaxAmount: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return "Suma s DPH";
+      },
+      sum: "Spolu",
+    },
+    paymentInfo: {
+      paymentMethod: "Spôsob platby",
+      paymentDate: "Dátum splatnosti",
+    },
+    paymentTotals: {
+      toPay: "Na úhradu",
+      paid: "Uhradené",
+      leftToPay: "Zostáva uhradiť",
+      amountInWords: "Suma slovom",
+    },
+    vatSummaryTable: {
+      vatRate: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return `Sadzba ${customTaxLabel || "DPH"}`;
+      },
+      vat: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return customTaxLabel || "DPH";
+      },
+      net: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return "Základ dane";
+      },
+      preTax: ({ customTaxLabel }: CustomTaxLabelArg) => {
+        return "Spolu s DPH";
+      },
+      total: "Spolu",
+    },
+    personAuthorizedToReceive: "Prevzal",
+    personAuthorizedToIssue: "Vystavil",
+    createdWith: "Vytvorené pomocou",
+    stripe: {
+      invoice: "Faktúra",
+      invoiceNumber: "Číslo faktúry",
+      dateOfIssue: "Dátum vystavenia",
+      dateDue: "Dátum splatnosti",
+      billTo: "Fakturovať",
+      description: "Popis",
+      qty: "Množstvo",
+      unitPrice: "Cena za jednotku",
+      amount: "Suma",
+      subtotal: "Medzisúčet",
+      total: "Spolu",
+      amountDue: "Na úhradu",
+      due: "splatné",
+      payOnline: "Zaplatiť online",
+      page: "Strana",
+      of: "z",
+    },
+  },
 };
