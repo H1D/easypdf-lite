@@ -13,12 +13,12 @@ import {
   updateColumnVisibility,
   addCustomColumn,
 } from "./form";
-import { saveInvoiceData, loadInvoiceData, loadSellers, saveSellers, loadBuyers, saveBuyers, saveAccordionState, loadAccordionState, saveLogo, loadLogo, removeLogo } from "./storage";
+import { saveInvoiceData, loadInvoiceData, loadSellers, saveSellers, loadBuyers, saveBuyers, saveAccordionState, loadAccordionState, saveLogo, loadLogo, removeLogo, saveQrCode, loadQrCode, removeQrCode } from "./storage";
 import { generateShareUrl, loadFromUrl } from "./url-sharing";
 import { debounce, generateId, today, endOfMonth, addDays, defaultServiceDate } from "./utils";
 
 // === Toast ===
-function showToast(message: string, type: "success" | "error" = "success") {
+function showToast(message: string, type: "success" | "error" | "warning" = "success") {
   const toast = document.getElementById("toast");
   if (!toast) return;
   toast.textContent = message;
@@ -209,6 +209,62 @@ function setupLogoUpload() {
   }
 }
 
+// === QR Code upload ===
+function setupQrCodeUpload() {
+  const fileInput = document.getElementById("qrcode-upload") as HTMLInputElement;
+  const preview = document.getElementById("qrcode-preview");
+  const img = document.getElementById("qrcode-img") as HTMLImageElement;
+  const removeBtn = document.getElementById("btn-remove-qrcode");
+
+  if (!fileInput) return;
+
+  // Restore saved qr code on init
+  const savedQrCode = loadQrCode();
+  if (savedQrCode && img && preview) {
+    img.src = savedQrCode;
+    preview.classList.remove("hidden");
+  }
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+      showToast("Please upload a JPEG, PNG, or WebP image", "error");
+      fileInput.value = "";
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showToast("Image must be less than 3MB", "error");
+      fileInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUri = e.target?.result as string;
+      if (img && preview) {
+        img.src = dataUri;
+        preview.classList.remove("hidden");
+        saveQrCode(dataUri);
+        onFormChange();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      if (img) img.src = "";
+      if (preview) preview.classList.add("hidden");
+      if (fileInput) fileInput.value = "";
+      removeQrCode();
+      onFormChange();
+    });
+  }
+}
+
 // === Share & Download ===
 function setupShareAndDownload() {
   const shareBtn = document.getElementById("btn-share");
@@ -217,15 +273,25 @@ function setupShareAndDownload() {
   if (shareBtn) {
     shareBtn.addEventListener("click", async () => {
       const data = extractFormData();
+      let qrCodeOmittedFromShare = false;
       if (data.logo && data.logo.startsWith("data:")) {
         showToast("Unable to share invoice with logo. Remove the logo first.", "error");
         return;
+      }
+      if (data.qrCode && data.qrCode.startsWith("data:")) {
+        qrCodeOmittedFromShare = true;
+        delete data.qrCode;
       }
       try {
         const url = generateShareUrl(data);
         await navigator.clipboard.writeText(url);
         window.history.replaceState(null, "", url);
-        showToast("Invoice link copied to clipboard!", "success");
+        showToast(
+          qrCodeOmittedFromShare
+            ? "Invoice link copied to clipboard! (QR code not included)"
+            : "Invoice link copied to clipboard!",
+          qrCodeOmittedFromShare ? "warning" : "success"
+        );
       } catch {
         showToast("Failed to copy link", "error");
       }
@@ -431,6 +497,7 @@ function init() {
   setupMobileTabs();
   setupDateHelpers();
   setupLogoUpload();
+  setupQrCodeUpload();
   setupShareAndDownload();
   setupProfiles();
 

@@ -347,6 +347,11 @@ body::before {
   background: var(--danger);
   border-left-color: #fca5a5;
 }
+.toast.warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-left-color: var(--warning-border);
+}
 
 /* === Main Layout === */
 .app-main {
@@ -797,8 +802,24 @@ input[type="file"] {
   object-fit: contain;
   border: 1px solid var(--border-light);
   border-radius: var(--r-sm);
+  background: var(--bg);
 }
 
+.qrcode-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.qrcode-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+}
 /* === Preview Panel === */
 .preview-panel {
   height: calc(100vh - 56px);

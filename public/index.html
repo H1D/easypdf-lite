@@ -380,6 +380,17 @@
               </div>
             </div>
 
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="qrcode-upload">Payment QR Code</label>
+                <input type="file" id="qrcode-upload" accept="image/jpeg,image/png,image/webp" data-testid="qrcode-upload-input">
+                <div id="qrcode-preview" class="qrcode-preview hidden" data-testid="qrcode-preview">
+                  <img id="qrcode-img" src="" alt="QR Code preview">
+                  <button type="button" id="btn-remove-qrcode" class="btn btn-sm btn-danger" data-testid="remove-qrcode-button">Remove</button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </details>
 

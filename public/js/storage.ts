@@ -71,6 +71,7 @@ export function loadAccordionState(): AccordionState | null {
 }
 
 const LOGO_LOCAL_STORAGE_KEY = "easypdf-lite-logo";
+const QRCODE_LOCAL_STORAGE_KEY = "easypdf-lite-qrcode";
 
 export function saveLogo(dataUri: string): void {
   try {
@@ -88,10 +89,27 @@ export function removeLogo(): void {
   localStorage.removeItem(LOGO_LOCAL_STORAGE_KEY);
 }
 
+export function saveQrCode(dataUri: string): void {
+  try {
+    localStorage.setItem(QRCODE_LOCAL_STORAGE_KEY, dataUri);
+  } catch {
+    // localStorage full — silently ignore
+  }
+}
+
+export function loadQrCode(): string | null {
+  return localStorage.getItem(QRCODE_LOCAL_STORAGE_KEY);
+}
+
+export function removeQrCode(): void {
+  localStorage.removeItem(QRCODE_LOCAL_STORAGE_KEY);
+}
+
 export function clearAllData(): void {
   localStorage.removeItem(PDF_DATA_LOCAL_STORAGE_KEY);
   localStorage.removeItem(SELLERS_LOCAL_STORAGE_KEY);
   localStorage.removeItem(BUYERS_LOCAL_STORAGE_KEY);
   localStorage.removeItem(ACCORDION_STATE_LOCAL_STORAGE_KEY);
   localStorage.removeItem(LOGO_LOCAL_STORAGE_KEY);
+  localStorage.removeItem(QRCODE_LOCAL_STORAGE_KEY);
 }

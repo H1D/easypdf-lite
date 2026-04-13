@@ -244,6 +244,12 @@ export function extractFormData(): InvoiceData {
     data.logo = logoImg.src;
   }
 
+  // Read QR code data URI from preview image if present
+  const qrCodeImg = document.getElementById("qrcode-img") as HTMLImageElement | null;
+  if (qrCodeImg && qrCodeImg.src && qrCodeImg.src.startsWith("data:")) {
+    data.qrCode = qrCodeImg.src;
+  }
+
   return data;
 }
 

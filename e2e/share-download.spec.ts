@@ -134,6 +134,36 @@ test.describe('Share link and download', () => {
     await expect(toast).toHaveClass(/error/);
   });
 
+  test('share with QR code shows warning and omits QR from shared URL', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    // Simulate a qr code being set by injecting a data URI into the qrcode-img element
+    await page.evaluate(() => {
+      const img = document.getElementById('qrcode-img') as HTMLImageElement;
+      const preview = document.getElementById('qrcode-preview');
+      if (img && preview) {
+        img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+        preview.classList.remove('hidden');
+      }
+    });
+
+    // Try to share
+    await page.locator('[data-testid="share-invoice-link-button"]').click();
+
+    // Should warn that QR code is omitted
+    const toast = page.locator('[data-testid="toast"]');
+    await expect(toast).toContainText('QR code not included');
+    await expect(toast).toHaveClass(/warning/);
+
+    const sharedUrl = page.url();
+    expect(sharedUrl).toContain('?data=');
+
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(sharedUrl);
+    await page.waitForSelector('[data-testid="items-container"]');
+    await expect(page.locator('[data-testid="qrcode-preview"]')).toHaveClass(/hidden/);
+  });
+
   test('language selection persists in shared URL', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 

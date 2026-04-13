@@ -669,7 +669,7 @@ function drawPaymentTotals(
   startY: number
 ): number {
   let y = startY;
-  y = checkPageBreak(doc, y, 80);
+  y = checkPageBreak(doc, y, 120);
 
   const formattedTotal = formatNumber(data.total);
   const currencyCode = data.currency;
@@ -679,28 +679,47 @@ function drawPaymentTotals(
   doc.setFontSize(12);
   doc.setTextColor(BLACK);
   const toPayText = `${t.paymentTotals.toPay}: ${formattedTotal} ${currencyCode}`;
-  doc.text(toPayText, MARGIN, y);
+  const toPayY = y;
+  doc.text(toPayText, MARGIN, toPayY);
 
   // Underline beneath the "To Pay" text
   const toPayWidth = doc.getTextWidth(toPayText);
   doc.setDrawColor(BLACK);
   doc.setLineWidth(1);
-  doc.line(MARGIN, y + 2, MARGIN + toPayWidth, y + 2);
+  doc.line(MARGIN, toPayY + 2, MARGIN + toPayWidth, toPayY + 2);
 
-  y += 20;
+  // Left column totals (must stay right under "To pay")
+  let yLeft = toPayY + 20;
+
+  // Right column QR code (optional)
+  let yRightEnd = toPayY;
+  if (data.qrCode) {
+    try {
+      const format = data.qrCode.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      const imgProps = doc.getImageProperties(data.qrCode);
+      const w = 90;
+      const h = (imgProps.height * w) / imgProps.width;
+      const x = PAGE_WIDTH - MARGIN - w;
+      const qrY = toPayY - 10;
+      doc.addImage(data.qrCode, format, x, qrY, w, h, undefined, 'FAST');
+      yRightEnd = qrY + h + 10;
+    } catch (e) {
+      console.warn('Failed to add QR code to PDF:', e);
+    }
+  }
 
   // "Paid: 0.00 {currency}"
   doc.setFont('OpenSans', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(DARK_GRAY);
-  doc.text(`${t.paymentTotals.paid}: ${formatNumber(0)} ${currencyCode}`, MARGIN, y);
-  y += 14;
+  doc.text(`${t.paymentTotals.paid}: ${formatNumber(0)} ${currencyCode}`, MARGIN, yLeft);
+  yLeft += 14;
 
   // "Left to Pay: {total} {currency}"
-  doc.text(`${t.paymentTotals.leftToPay}: ${formattedTotal} ${currencyCode}`, MARGIN, y);
-  y += 20;
+  doc.text(`${t.paymentTotals.leftToPay}: ${formattedTotal} ${currencyCode}`, MARGIN, yLeft);
+  yLeft += 20;
 
-  return y;
+  return Math.max(yLeft, yRightEnd);
 }
 
 function drawSignatureSection(

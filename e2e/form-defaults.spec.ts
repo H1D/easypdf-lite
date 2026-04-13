@@ -146,6 +146,11 @@ test.describe('Form loads with correct defaults', () => {
     await expect(logoPreview).toHaveClass(/hidden/);
   });
 
+  test('QR code preview is hidden by default', async ({ page }) => {
+    const qrcodePreview = page.locator('[data-testid="qrcode-preview"]');
+    await expect(qrcodePreview).toHaveClass(/hidden/);
+  });
+
   test('seller and buyer profile selects show default placeholder', async ({ page }) => {
     const sellerSelect = page.locator('[data-testid="seller-profile-select"]');
     const buyerSelect = page.locator('[data-testid="buyer-profile-select"]');

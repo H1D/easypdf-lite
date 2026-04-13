@@ -148,6 +148,7 @@ export interface InvoiceData {
   stripePayOnlineUrl?: string;
   notes?: string;
   notesFieldIsVisible: boolean;
+  qrCode?: string;
   personAuthorizedToReceiveFieldIsVisible: boolean;
   personAuthorizedToIssueFieldIsVisible: boolean;
   customColumns?: CustomColumnDef[];
