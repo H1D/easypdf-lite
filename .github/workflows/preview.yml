@@ -67,16 +67,43 @@ jobs:
 
       - run: bun run build
 
-      - name: Deploy anonymous Netlify preview
+      - name: Deploy Netlify preview
         id: preview
         run: |
-          OUTPUT=$(npx netlify-cli deploy --dir=public --json --allow-anonymous)
-          DEPLOY_URL=$(echo "$OUTPUT" | jq -r '.deploy_url // .url // .ssl_url // empty')
+          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
+            OUTPUT=$(npx --yes netlify-cli@25.6.0 deploy --dir=public --json)
+          else
+            set +e
+            OUTPUT=$(npx --yes netlify-cli@25.6.0 deploy --dir=public --json --allow-anonymous 2>&1)
+            set -e
+          fi
+
+          DEPLOY_URL=$(OUTPUT="$OUTPUT" node <<'NODE'
+          const output = process.env.OUTPUT || "";
+          const jsonStart = output.lastIndexOf("{");
+          const jsonEnd = output.lastIndexOf("}");
+
+          if (jsonStart === -1 || jsonEnd === -1 || jsonEnd < jsonStart) {
+            process.exit(0);
+          }
+
+          try {
+            const parsed = JSON.parse(output.slice(jsonStart, jsonEnd + 1));
+            console.log(parsed.deploy_url || parsed.url || parsed.ssl_url || parsed.site_url || "");
+          } catch {
+            process.exit(0);
+          }
+          NODE
+          )
+
           if [ -z "$DEPLOY_URL" ]; then
             echo "$OUTPUT"
             exit 1
           fi
           echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
       - name: Register preview deployment
         uses: actions/github-script@v7
