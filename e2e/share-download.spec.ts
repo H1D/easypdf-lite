@@ -80,6 +80,34 @@ test.describe('Share link and download', () => {
     await expect(page.locator('[data-testid="item-net-price-input"]').first()).toHaveValue('150');
   });
 
+  test('payment URL persists in shared URL', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    await page.locator('[data-testid="payment-url-input"]').fill('https://example.com/pay/invoice-123');
+    await page.locator('[data-testid="share-invoice-link-button"]').click();
+
+    const toast = page.locator('[data-testid="toast"]');
+    await expect(toast).toContainText('Invoice link copied to clipboard!');
+    await expect(toast).toHaveClass(/success/);
+    await expect(toast).not.toContainText('QR code not included');
+
+    const sharedUrl = page.url();
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(sharedUrl);
+    await page.waitForSelector('[data-testid="items-container"]');
+
+    await expect(page.locator('[data-testid="payment-url-input"]')).toHaveValue('https://example.com/pay/invoice-123');
+  });
+
+  test('payment URL persists after reload', async ({ page }) => {
+    await page.locator('[data-testid="payment-url-input"]').fill('https://example.com/pay/reload-test');
+    await page.waitForTimeout(700);
+    await page.reload();
+    await page.waitForSelector('[data-testid="items-container"]');
+
+    await expect(page.locator('[data-testid="payment-url-input"]')).toHaveValue('https://example.com/pay/reload-test');
+  });
+
   test('share shows success toast', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
@@ -110,6 +138,22 @@ test.describe('Share link and download', () => {
     const download = await downloadPromise;
     const filename = download.suggestedFilename();
     expect(filename).toMatch(/\.pdf$/);
+  });
+
+  test('download with payment URL triggers PDF generation', async ({ page }) => {
+    await page.locator('[data-testid="seller-name-input"]').fill('Test Seller');
+    await page.locator('[data-testid="seller-email-input"]').fill('seller@test.com');
+    await page.locator('[data-testid="seller-address-input"]').fill('123 Test St');
+    await page.locator('[data-testid="buyer-name-input"]').fill('Test Buyer');
+    await page.locator('[data-testid="buyer-email-input"]').fill('buyer@test.com');
+    await page.locator('[data-testid="buyer-address-input"]').fill('456 Test Ave');
+    await page.locator('[data-testid="payment-url-input"]').fill('https://example.com/pay/invoice-123');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('[data-testid="download-invoice-button"]').click();
+
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/);
   });
 
   test('share with logo shows error toast', async ({ page, context }) => {

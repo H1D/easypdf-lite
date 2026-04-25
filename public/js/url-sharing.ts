@@ -12,7 +12,7 @@ export const INVOICE_KEY_COMPRESSION_MAP: Record<string, string> = {
   vatTableSummaryIsVisible: "o", paymentMethod: "p", paymentMethodFieldIsVisible: "q",
   paymentDue: "r", stripePayOnlineUrl: "s", notes: "t", notesFieldIsVisible: "u",
   personAuthorizedToReceiveFieldIsVisible: "v", personAuthorizedToIssueFieldIsVisible: "w",
-  taxLabelText: "1",
+  taxLabelText: "1", paymentUrl: "9",
   label: "x", value: "y",
   id: "z", name: "A", address: "B", vatNo: "C", vatNoFieldIsVisible: "D",
   email: "E", accountNumber: "F", accountNumberFieldIsVisible: "G",

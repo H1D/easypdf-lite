@@ -104,6 +104,7 @@ export function populateForm(data: InvoiceData): void {
 
   // Payment & notes
   setInputValue("paymentMethod", data.paymentMethod ?? "");
+  setInputValue("paymentUrl", data.paymentUrl ?? "");
   setTextareaValue("invoiceNotes", data.notes ?? "");
 
   // Visibility checkboxes
@@ -226,6 +227,7 @@ export function extractFormData(): InvoiceData {
     vatTableSummaryIsVisible: getCheckbox("vatTableSummaryIsVisible"),
     paymentMethod: getInputValue("paymentMethod"),
     paymentMethodFieldIsVisible: getCheckbox("paymentMethodFieldIsVisible"),
+    paymentUrl: getInputValue("paymentUrl") || undefined,
     notes: getTextareaValue("invoiceNotes"),
     notesFieldIsVisible: getCheckbox("notesFieldIsVisible"),
     personAuthorizedToReceiveFieldIsVisible: getCheckbox("personAuthorizedToReceiveFieldIsVisible"),
