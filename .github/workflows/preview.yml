@@ -158,7 +158,7 @@ jobs:
               },
               {
                 title: 'Slovak locale smoke',
-                note: 'PR #8 language path with Slovak labels, EUR, and DPH tax wording.',
+                note: 'Slovak labels, EUR formatting, and DPH tax wording.',
                 data: 'N4IgjCBcICIAoAkQBoQEMogM4GsUgCNMYYA6AWXNIE1br8BjTAUQFUAlfAE0y4FMAZmgCuAGwAu+AVFAAPTADE0OccIBOGVAE9MAZQDSAWgBMABmMA2Q6dMQAvqgDmmM5esAWEwFZ8ACxfmVqaexj6oAJaKyqoa+ABWUOJqwnyoeJCgxpgAkgDCAATwSKgAgsQA9lxoAG5o4nyi+QAqfFji+VikaqTlpPgAQpgIojUAdmj5YAA6owAcYGD5tvn9GuLhWCO1+Ll6+q4WYMYAzO5eFvgwicmpIMy8lTV1DQACfLJoALYADqJ8pPU2vgFHtjosjjYljZTJMAJyzADs+XclmO+QRXncEFQAHFrilUEhoLpWP0SgZ+gANfDZfG3STQfDCKBCURYPgOECiGQgLLQPKFRD4MrQADyXAIfDWDUKfE+5XyaFInQGmAAcl9Wus+PkvDNgjDlvpylhwgw+Ds9gd4QiLJjLnTUPdoJVJdLRG8Pj8-gCtfgGSAmSy0GyOahPlAANqgUyOkDHTD4dzB0OoABScZFIGNowAXmJxGgGOEdTh8kIVOoi6M5cJ8gB3cpqHACUTlevM1D6OMAGUTqHIKfZqDVUHcqFFcbgmF8lXwAEU45xIBDULo400oGZUKw4wA1MezUyoADqcepkFhFlQ9EgSQJIAAWlAvLaHDG4wnGahk5BWcOQAzO8blKTB2HKBhxnyUQzT4UZiwmZg0CwLQ4BgBR8h7cJ6nwbtgIfPtvxAQc-xDADRxXCcp0wHAsAXJcx1hWE1w3LdjxAXd8NuA9IHcJjT3PKAmNIWYbzjZ9IC8eERLsABdVBRigBYEXcETUHKONvkwfo0FGHBymqLR8m+NQ+GqOdUAARzjNQAjcUwvGsWF-T0NtajLNsGBDHUTLMkt63LcJZBif4gy41Bqjjes6TsIA',
               },
               {
