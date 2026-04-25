@@ -1,0 +1,177 @@
+name: Deploy Preview
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to deploy
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve pull request
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullNumber = context.eventName === 'workflow_dispatch'
+              ? Number(core.getInput('pr_number'))
+              : context.payload.pull_request.number;
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            if (pr.state !== 'open') {
+              core.setFailed(`PR #${pullNumber} is ${pr.state}`);
+              return;
+            }
+
+            core.setOutput('number', String(pr.number));
+            core.setOutput('head_repo', pr.head.repo.full_name);
+            core.setOutput('head_sha', pr.head.sha);
+            core.setOutput('head_ref', pr.head.ref);
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_sha }}
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run build
+
+      - name: Deploy anonymous Netlify preview
+        id: preview
+        run: |
+          OUTPUT=$(npx netlify-cli deploy --dir=public --json --allow-anonymous)
+          DEPLOY_URL=$(echo "$OUTPUT" | jq -r '.deploy_url // .url // .ssl_url // empty')
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "$OUTPUT"
+            exit 1
+          fi
+          echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Register preview deployment
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_URL: ${{ steps.preview.outputs.deploy_url }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.HEAD_SHA,
+              environment: `preview/pr-${{ steps.pr.outputs.number }}`,
+              auto_merge: false,
+              required_contexts: [],
+              transient_environment: true,
+              production_environment: false,
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'success',
+              environment_url: process.env.DEPLOY_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      - name: Update PR description with preview links
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_URL: ${{ steps.preview.outputs.deploy_url }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        with:
+          script: |
+            const previewUrl = new URL(process.env.DEPLOY_URL);
+            const cases = [
+              {
+                title: 'Mixed VAT + long total row',
+                note: 'Long item names, item notes, custom columns, and a wide sum row.',
+                data: 'N4IgjCBcIGoIIBUQBoQFYoG1QDYogGUBpAVRRAHYoAXAJwFcBTVAL3wGcBrekAX2Vz4ACgAsAhu0bkqkOk1b4ADuMl8AuqjH5GAO3IAjfAE0TRgLQBZC2YAiN8gGN8AURIAlcgBN8nxgDMxegAbanI-KFAAD3wASR0ANwB7AEsHKVQAT2E3ZxgY5wB1MwAZAHkAOQBxMwAGGoh+EABzfAAmGtacWoAWM1aMVBE2jq6a3v7yZNiElLTyACsaBmYQTgiQVvx4BAACcsTyOBcJDKEbADEdoVpGeOTGAHcdgkYgoMZacgAhfDA6neckTEAFtFO9nnRGIxqAAdHRwYHsagfTwg8gAYXw5WKYFaAGZumgcBQABwATi+9XI9lky1Qzg4r3etAAAowgaD3gA6ZFI8jnLHFMlgOBfcpwMZgChgHDdPF1ciVJbyEAACXwovF2NaR1QMWVK1C0HIPEgASCkkaQXWm2g2z2B1QR2g11u9yeX3oGQ+O2K1G8qB+0HaNR26PoSMSwJ9cHiuiYcK+HyCyT0qEx0BszjJJIoODQctaEFQNLkKwZ0H0Xo+bI5YMYPMYfNQRpAJqg5stqGBWFANQNqDx0wcQXovnYO0SOn0iTEtE8qaayB27HoikUiVo1GXYh0nh2DijYOSu7SOxuG63i655G6A5AJPWXFNhDEYgIZmc5SQqGUEik0BuLojxiNajQAFL3s6IBwDoOj0KBzxvgQOxgmI1B+JuwIrvQ+jsA4tDJIo1DJFOOwPMk1AiDsYg7L4Kb6B86GvBkOxBFOTR0U2BFESRZGYbQ56JE8Dy0GI66LuQRD3sU+DkBYHagZIqDlFAYCoKU95CPg3pzuQACK94eJAuJkmSXJmagBD3kgkD4qgZC0iqMBqa0ZkWWSqAFPeAAaUBuSSHkUBQqBGPeABaaloDmFm5hQdQJQlYD8H295DsaqB3maSkrI+kCgM++AEM4bgwGYBRENZv4qABIA2K8yRxrQWQQVBsScow0Y6NQ6GkTo5Gbpw7AiIkiioWIDicGITTpCA0lOSsskZSACnZRaKyqZAeIaVpPhiFkqCGQtqDGa0FBoFyaBWTZUAkg594uZAJKdJdXm+VAOA4FyuKhRFt1kq0XI4K0KUgP2x0gOlbaZYp62oHlBXcC4PlCLUVLVf++DouxkiJPQoStRD0GlPjZiJH4Zj4aNjDnowyTAlWtCSF1oSoPNZaoEt0MrbDykgJt6kgJpEPadAlGdQZRlQN0gXnddEO2TU90Q49MtcnLIDeRDfmQErIBhRDkWQGr528BoIB6HZBY1FyeJoMFqAHBDij4F8u6cDsCBiTo7B+B85AAI73p8wYjLUaC1GS5Ctq6dyPDsfjJJE1D0DcOwzToTHIvu+iseiMQ3qgpocyA8T3g8Bq8EAA',
+              },
+              {
+                title: 'Stripe template + pay online',
+                note: 'Stripe layout, USD formatting, pay-online URL, and buyer notes.',
+                data: 'N4IgjCBcIGoIIBUQBoQEMogKYDsUgCNMBZU4gAgBFlyBNe2-AY0wFUBlS-AE0wGcALgCcAlgAcs+AGZRQAD0wBJHADcA9iKaTUAT0zsEAJUUAFAKIBaACwAmWyAC+qAOaYbABhsA2C+6sWbAFZ8AAs3Tx8-AODUESVVDS18ACsoYQBXLFQAa1kQG0x4BHIAOTV8OEwzND4dE0oAMXITISwVESwAd3J2LAAbPqwhfAAhTDB3d3IzOTQAWzFBnuEsLAEAHRw4OcEh7nn8AGFMEoAZMBsAZitArwB2AA4AThH3CFQuSAyskDN+fsGQgAAlhZgtBgA6ARYQT4BonU5PMBwEYlOB+MB3MBeKyXSb4ADiaSEmVQAAlMCi0WcbJVUIpiaSQAJMPh0lApGg+nwsE4QH08gVoAg0HJyIouKhKtAykIBCFOiIcNxyA0lWgcFpyAgsAdUGNoIFJuRiGghNk1stWmtNuwNaqhBqmCI+Ew1DRDnSQMdoBwLGZFCULBcLNdbo8nvhPt9UH9oGgxCCwYssFCYSzUCzoIY1OloeQBGpyHATOQAI6ZTIQtmM3moOZQADaoHctdQl1ZqCsHK5PNQACk2yBpSBKDCRM4cORars5uQ0OluCIMyAANJD06dkDEHvcn4lKAXVAAeSHJkwIVzw1QAEUh4ZDw9Aqh2EOkJB3KhWEOYFAbP-PxAAB1IcAA0oEAxgvhJH4AC0-wApwWyHDtoHwbtIE5PcByHEd6iaTo1HNKQ+jUbpBDQAgRD6EQAC80AEEQ1DwVB12gplNzQ1Ad0w3t9ygB4TzPC8r3wO92J+B9IBsCYXzfCCvx-Q8vAeQCQIk1BwI-VAoJjEB4MgbFVIcABdVA8EgS4nkmVByg0kAxEwQ4zV4VAyyHYZoA8bxfECXxI0zTAWjaDpuikEQ5AEdJWnIZxcCGBisBVAgdHIQ5FGrVB2XslQh06Ic+AvAQBDEPhIAAenKpgQiwJhslzAQIUEUQJAhN05iq8qxDQHQqr4AB9aFBH6sRWnaLpHCAA',
+              },
+              {
+                title: 'German locale + CHF formatting',
+                note: 'Localized labels, date format, currency formatting, and custom tax label.',
+                data: 'N4IgjCBcILIOoGUAqIA0ICGUQBMCmaIARtgCKkB0MMFAmvbYQMbYDCAEgGKE7b4BmGAK4AbAC6F+UUAA9sAJTxMAFgDshqgOaEAnmQCiAWg6dDAJgAMZgGyGLAFhABfdNuiWbd++YCshZdgetg6+hACW2ACSqgBuAPZhTAToAFZQYgBOQnjoANbSIGbYAKqRpIQAgtgwQgDOYngZAAQA4gC2ROyEAELY3RhqynH89RkYtbV4TWAAOqoAHBYWYE0AWkIZiQHorGzsRmBmAMwU9j7WFADs8wCchOWQmdno+tgZSmoamgACeDIYbQADiI8BQGvVCNxoBwbkcmktLtYmpYwCtrMd5k0fGYbj4mpdCC10lkciAutBit0EHAOKt2IsquhIsTniAJNBCEIoIIRJMXCARAUihSypVsBURIC8KomgBpDT4JoVInoXrQaI4OqZMJ4UbjSZNG5zI5LCxNbqNVSEXbQ-aGG7zS4Uaw+ewUI5mCDoB5PUmvaC5BV4X7-IEgsG6iTodkgTncjC8vD8tpQADaoAsLNJR2whEckB5k3QACks+gqtALWMxF9aoCMLk8FGQLKyyAADK59AweOJ9AAOSgZgoPnQAHk2wAFbBIDDadAARTb8ig1nsFnQCDbKEg8woYHQxTbADUoGBrEt0HA2wANM8453oRiPEnoVZny4P6wuDNtnMc9B80LUlSxfVkKw7MIAC9pSgwhWzA0lOwA2BeyLEBB0gA8QAnRD0GnaAEDEfJF2Xe9LxALc8JAHc92wo9qNPLDLA3EBr2ou9IBuJ0zCfNt32Y7iKDMJwAF10CtSATRsCh5nQOI20BPoMFUXImiQMZVFqfhGkIABHNsMkCKxgh8Ow7mjbBJ3eGIdQAdyafgwhkGt3iaTRpUaDAGhwJoiB0JpWEiCg42omI2zsrMnCAA',
+              },
+              {
+                title: 'Slovak locale smoke',
+                note: 'PR #8 language path with Slovak labels, EUR, and DPH tax wording.',
+                data: 'N4IgjCBcICIAoAkQBoQEMogM4GsUgCNMYYA6AWXNIE1br8BjTAUQFUAlfAE0y4FMAZmgCuAGwAu+AVFAAPTADE0OccIBOGVAE9MAZQDSAWgBMABmMA2Q6dMQAvqgDmmM5esAWEwFZ8ACxfmVqaexj6oAJaKyqoa+ABWUOJqwnyoeJCgxpgAkgDCAATwSKgAgsQA9lxoAG5o4nyi+QAqfFji+VikaqTlpPgAQpgIojUAdmj5YAA6owAcYGD5tvn9GuLhWCO1+Ll6+q4WYMYAzO5eFvgwicmpIMy8lTV1DQACfLJoALYADqJ8pPU2vgFHtjosjjYljZTJMAJyzADs+XclmO+QRXncEFQAHFrilUEhoLpWP0SgZ+gANfDZfG3STQfDCKBCURYPgOECiGQgLLQPKFRD4MrQADyXAIfDWDUKfE+5XyaFInQGmAAcl9Wus+PkvDNgjDlvpylhwgw+Ds9gd4QiLJjLnTUPdoJVJdLRG8Pj8-gCtfgGSAmSy0GyOahPlAANqgUyOkDHTD4dzB0OoABScZFIGNowAXmJxGgGOEdTh8kIVOoi6M5cJ8gB3cpqHACUTlevM1D6OMAGUTqHIKfZqDVUHcqFFcbgmF8lXwAEU45xIBDULo400oGZUKw4wA1MezUyoADqcepkFhFlQ9EgSQJIAAWlAvLaHDG4wnGahk5BWcOQAzO8blKTB2HKBhxnyUQzT4UZiwmZg0CwLQ4BgBR8h7cJ6nwbtgIfPtvxAQc-xDADRxXCcp0wHAsAXJcx1hWE1w3LdjxAXd8NuA9IHcJjT3PKAmNIWYbzjZ9IC8eERLsABdVBRigBYEXcETUHKONvkwfo0FGHBymqLR8m+NQ+GqOdUAARzjNQAjcUwvGsWF-T0NtajLNsGBDHUTLMkt63LcJZBif4gy41Bqjjes6TsIA',
+              },
+              {
+                title: 'Shared link without QR payload',
+                note: 'No QR data, for checking that local QR state does not leak into shared invoices.',
+                data: 'N4IgjCBcIGoIIBUQBoQEMogKYDsUgCNMARYgegFkKyBNOm-AY0wHEAhABXwBNNusAZmgCuAGwAu+AVFAAPTAEkcANwD2AS0ZZ8AT0wA5APIBaAIoAlYwoDKhgDKIFh-SAC+qAOaYATAAZvAGzGvgAsxt4ArPgAFj7+QaHhUajqiioaWvgAVlDiAE7CWKgA1jIg3pjwCAAE+qr4cJgAomgAzjocxABi1Rx5WMrqWADu1dZYoqJYefhsmGC+vtVNsmgAtgAOU2P5WFjiADo4cGut4tPc6-gAwgZ2YN4AzCERAQDsABwAnGy+EKjEXIFIogJqYVoTKZ5AACWFWmymADpzmd8F07l8wHA2Po4KEwG8wAEQo9FvgWEDCqgABKYbG4-R2byNVAKSkgyTQfDCKBCUQQ9wgURlCrQKq1eqoRrQPoDIajNjCHTTap2cS8VBzaB+JbXYRnVRrFVwZS4QpHNjTUTqPCoW7QYhNL4fN4BCIk7z-ECAyD5KmgzAEJXTWHwrZYZFYVGoTkgbm8tD8rCCtZQADaoF87NQj0w+BCCaTqAAUtmQNKQBZjAJ+lhqq1omh+txqja1Jo6601qpinWUZJUABpMt2POoCiFiGoFyQMCoQxlrjQfv4Uxl8xQL5fRFb1DWMtISB+VAAVTLME3293IAA6mWABpQMBX52oBi+4GoABaT+fO4+HyuAAuqgeCzn+zofKg9Qfv6GyYGwaA4MU1QIHkSGtAI0z4AAjmWMzavEwQRMEXz4LGCDROorTVAI6iyOIwj9K2ODnKx6iqDgiaiDo1SMJx4hoDaNE4Ko1QWNUGxoDooiqGg3CIvGsEgsoZbDOyrhAA',
+              },
+            ];
+
+            const linkLines = cases.map((testCase) => {
+              const url = new URL(previewUrl.toString());
+              url.searchParams.set('data', testCase.data);
+              return `- [${testCase.title}](${url.toString()}) - ${testCase.note}`;
+            });
+
+            const marker = '<!-- deploy-preview -->';
+            const previewBlock = [
+              marker,
+              '---',
+              `**Deploy Preview:** ${previewUrl.toString()}`,
+              '',
+              '**Prefilled test links:**',
+              ...linkLines,
+            ].join('\n');
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: Number(process.env.PR_NUMBER),
+            });
+
+            let body = pr.body || '';
+
+            if (body.includes(marker)) {
+              body = body.replace(new RegExp(`${marker}[\\s\\S]*$`), previewBlock);
+            } else {
+              body = body.trimEnd() + '\n\n' + previewBlock;
+            }
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: Number(process.env.PR_NUMBER),
+              body,
+            });
