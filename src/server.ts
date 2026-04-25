@@ -47,7 +47,7 @@ const CSP = [
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "frame-src blob:",
+  "frame-src blob: data:",
   "object-src blob:",
   "connect-src 'self'",
   "base-uri 'self'",
