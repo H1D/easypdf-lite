@@ -15,11 +15,12 @@ Inspired by [easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf).
 ## What you get
 
 - Invoice form with live PDF preview and one-click download
-- 10 languages, 45+ currencies, VAT/tax calculations
+- 11 languages, 67 currencies, VAT/tax calculations
 - Shareable invoice links (URL-encoded, compressed)
+- Payment QR codes generated from a shareable payment URL
 - Saved seller/buyer profiles (localStorage)
 - Cyrillic/Unicode support (embedded Open Sans fonts)
-- 60 e2e tests
+- 64 e2e tests
 
 <details>
 <summary><strong>URL API — generate invoice links programmatically</strong></summary>
@@ -72,7 +73,7 @@ Only include the fields you need — the app fills in defaults for everything el
 
 ## What you don't get
 
-API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_modules.
+API endpoints, analytics, Sentry, newsletters, about pages, or hundreds of MB of node_modules.
 
 ## Compared to [easy-invoice-pdf](https://github.com/VladSez/easy-invoice-pdf)
 
@@ -82,11 +83,11 @@ API endpoints, analytics, Sentry, newsletters, about pages, or 200 MB of node_mo
 | UI | React 19 + shadcn/ui | Vanilla TS |
 | Styling | Tailwind CSS | Plain CSS |
 | PDF | @react-pdf/renderer | jsPDF (browser-side) |
-| Dependencies | 50+ | 3 runtime, 4 dev |
-| Client payload | ~2 MB | ~555 KB |
+| Dependencies | 50+ | 4 runtime, 5 dev |
+| Client payload | ~2 MB | ~940 KB |
 | Memory (idle) | 290 MB | 4 MB |
 | Docker image | 6.4 GB | 10 MB |
-| node_modules | 1.3 GB | 83 MB |
+| node_modules | 1.3 GB | 85 MB |
 
 ## Self-hosting
 
