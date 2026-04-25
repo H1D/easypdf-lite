@@ -32,7 +32,9 @@ function showToast(message: string, type: "success" | "error" = "success") {
 function refreshPreview() {
   try {
     const data = extractFormData();
-    updatePdfPreview(data);
+    void updatePdfPreview(data).catch((err) => {
+      console.error("PDF generation error:", err);
+    });
   } catch (err) {
     console.error("PDF generation error:", err);
   }
@@ -233,10 +235,10 @@ function setupShareAndDownload() {
   }
 
   if (downloadBtn) {
-    downloadBtn.addEventListener("click", () => {
+    downloadBtn.addEventListener("click", async () => {
       try {
         const data = extractFormData();
-        downloadPdf(data);
+        await downloadPdf(data);
         showToast("PDF downloaded!", "success");
       } catch (err) {
         console.error("Download error:", err);
@@ -407,6 +409,7 @@ function getDefaultData(): InvoiceData {
     vatTableSummaryIsVisible: true,
     paymentMethod: "Bank Transfer",
     paymentMethodFieldIsVisible: true,
+    paymentUrl: "",
     notes: "",
     notesFieldIsVisible: true,
     personAuthorizedToReceiveFieldIsVisible: true,

@@ -109,6 +109,12 @@ test.describe('Form loads with correct defaults', () => {
     await expect(paymentMethod).toHaveValue('Bank Transfer');
   });
 
+  test('payment URL defaults to empty', async ({ page }) => {
+    const paymentUrl = page.locator('[data-testid="payment-url-input"]');
+    await expect(paymentUrl).toBeVisible();
+    await expect(paymentUrl).toHaveValue('');
+  });
+
   test('one default invoice item exists', async ({ page }) => {
     const items = page.locator('[data-testid="invoice-item"]');
     await expect(items).toHaveCount(1);

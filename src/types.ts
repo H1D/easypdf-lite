@@ -145,6 +145,7 @@ export interface InvoiceData {
   paymentMethod?: string;
   paymentMethodFieldIsVisible: boolean;
   paymentDue: string;
+  paymentUrl?: string;
   stripePayOnlineUrl?: string;
   notes?: string;
   notesFieldIsVisible: boolean;

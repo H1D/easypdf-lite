@@ -2,6 +2,7 @@ import { INVOICE_PDF_TRANSLATIONS } from './i18n';
 import type { TranslationSet as TranslationStrings } from './i18n';
 import { formatNumber, formatDate, formatCurrency } from './utils';
 import type { InvoiceData, InvoiceItem } from '../../src/types';
+import QRCode from 'qrcode';
 
 // jsPDF and jspdf-autotable are loaded as UMD globals via script tags
 declare const jspdf: { jsPDF: any };
@@ -66,6 +67,26 @@ function drawHLine(doc: any, y: number, color: string = LIGHT_GRAY): void {
   doc.setDrawColor(color);
   doc.setLineWidth(0.5);
   doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+}
+
+async function generatePaymentQrDataUrl(paymentUrl?: string): Promise<string | undefined> {
+  const trimmed = paymentUrl?.trim();
+  if (!trimmed) return undefined;
+
+  try {
+    return await QRCode.toDataURL(trimmed, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 256,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF',
+      },
+    });
+  } catch (e) {
+    console.warn('Failed to generate payment QR code:', e);
+    return undefined;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -671,10 +692,11 @@ function drawPaymentTotals(
   doc: any,
   data: InvoiceData,
   t: TranslationStrings,
-  startY: number
+  startY: number,
+  paymentQrDataUrl?: string
 ): number {
   let y = startY;
-  y = checkPageBreak(doc, y, 80);
+  y = checkPageBreak(doc, y, paymentQrDataUrl ? 150 : 80);
 
   const formattedTotal = formatNumber(data.total);
   const currencyCode = data.currency;
@@ -684,28 +706,52 @@ function drawPaymentTotals(
   doc.setFontSize(12);
   doc.setTextColor(BLACK);
   const toPayText = `${t.paymentTotals.toPay}: ${formattedTotal} ${currencyCode}`;
-  doc.text(toPayText, MARGIN, y);
+  const toPayY = y;
+  doc.text(toPayText, MARGIN, toPayY);
 
   // Underline beneath the "To Pay" text
   const toPayWidth = doc.getTextWidth(toPayText);
   doc.setDrawColor(BLACK);
   doc.setLineWidth(1);
-  doc.line(MARGIN, y + 2, MARGIN + toPayWidth, y + 2);
+  doc.line(MARGIN, toPayY + 2, MARGIN + toPayWidth, toPayY + 2);
 
-  y += 20;
+  let leftY = toPayY + 20;
+  let rightY = toPayY;
 
   // "Paid: 0.00 {currency}"
   doc.setFont('OpenSans', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(DARK_GRAY);
-  doc.text(`${t.paymentTotals.paid}: ${formatNumber(0)} ${currencyCode}`, MARGIN, y);
-  y += 14;
+  doc.text(`${t.paymentTotals.paid}: ${formatNumber(0)} ${currencyCode}`, MARGIN, leftY);
+  leftY += 14;
 
   // "Left to Pay: {total} {currency}"
-  doc.text(`${t.paymentTotals.leftToPay}: ${formattedTotal} ${currencyCode}`, MARGIN, y);
-  y += 20;
+  doc.text(`${t.paymentTotals.leftToPay}: ${formattedTotal} ${currencyCode}`, MARGIN, leftY);
+  leftY += 20;
 
-  return y;
+  if (paymentQrDataUrl) {
+    try {
+      const qrWidth = 90;
+      const qrX = PAGE_WIDTH - MARGIN - qrWidth;
+      const qrY = toPayY - 10;
+      doc.addImage(paymentQrDataUrl, 'PNG', qrX, qrY, qrWidth, qrWidth, undefined, 'FAST');
+      rightY = qrY + qrWidth + 10;
+
+      if (data.notesFieldIsVisible && data.notes) {
+        doc.setFont('OpenSans', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(MEDIUM_GRAY);
+        const noteWidth = 170;
+        const noteLines = doc.splitTextToSize(data.notes, noteWidth);
+        doc.text(noteLines, PAGE_WIDTH - MARGIN, rightY, { align: 'right' });
+        rightY += noteLines.length * 9 + 10;
+      }
+    } catch (e) {
+      console.warn('Failed to add payment QR code to PDF:', e);
+    }
+  }
+
+  return Math.max(leftY, rightY);
 }
 
 function drawSignatureSection(
@@ -839,13 +885,14 @@ function drawFooter(doc: any, data: InvoiceData, t: TranslationStrings): void {
  * Generate and return the jsPDF document object.
  * Does NOT save or create blob — just returns doc.
  */
-export function generatePdf(data: InvoiceData): any {
+export async function generatePdf(data: InvoiceData): Promise<any> {
   const { jsPDF } = jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   registerFonts(doc);
 
   const t: TranslationStrings = INVOICE_PDF_TRANSLATIONS[data.language];
   const taxLabel = data.taxLabelText || 'VAT';
+  const paymentQrDataUrl = await generatePaymentQrDataUrl(data.paymentUrl);
 
   let y = MARGIN;
 
@@ -862,13 +909,15 @@ export function generatePdf(data: InvoiceData): any {
   y = drawPaymentAndVatSummary(doc, data, t, taxLabel, y);
 
   // (e) Payment Totals
-  y = drawPaymentTotals(doc, data, t, y);
+  y = drawPaymentTotals(doc, data, t, y, paymentQrDataUrl);
 
   // (f) Signature Section
   y = drawSignatureSection(doc, data, t, y);
 
   // (g) Notes
-  y = drawNotes(doc, data, y);
+  if (!paymentQrDataUrl) {
+    y = drawNotes(doc, data, y);
+  }
 
   // (h) Footer (on every page)
   drawFooter(doc, data, t);
@@ -879,8 +928,8 @@ export function generatePdf(data: InvoiceData): any {
 /**
  * Generate the PDF and return it as a Blob.
  */
-export function generatePdfBlob(data: InvoiceData): Blob {
-  const doc = generatePdf(data);
+export async function generatePdfBlob(data: InvoiceData): Promise<Blob> {
+  const doc = await generatePdf(data);
   return doc.output('blob') as Blob;
 }
 
@@ -888,8 +937,8 @@ export function generatePdfBlob(data: InvoiceData): Blob {
  * Generate the PDF, create a blob URL, and trigger a download.
  * Filename: invoice-{language}-{invoiceNumberValue}.pdf
  */
-export function downloadPdf(data: InvoiceData): void {
-  const blob = generatePdfBlob(data);
+export async function downloadPdf(data: InvoiceData): Promise<void> {
+  const blob = await generatePdfBlob(data);
   const url = URL.createObjectURL(blob);
   const invoiceNumber = data.invoiceNumberObject?.value || 'draft';
   const filename = `invoice-${data.language}-${invoiceNumber}.pdf`;
@@ -908,8 +957,8 @@ export function downloadPdf(data: InvoiceData): void {
  * using a data URL. This avoids the blob URL approach which causes
  * Firefox/Waterfox to download the PDF instead of displaying it inline.
  */
-export function updatePreview(data: InvoiceData): void {
-  const doc = generatePdf(data);
+export async function updatePreview(data: InvoiceData): Promise<void> {
+  const doc = await generatePdf(data);
   const dataUrl = doc.output('dataurlstring') as string;
 
   const iframe = document.getElementById('pdf-preview') as HTMLIFrameElement | null;
